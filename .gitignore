@@ -1,0 +1,9 @@
+# Memoria interna de Claude Code (no debe subirse)
+memory/
+
+# Artefactos de compilación C++
+bacp_tabu/bacp
+bacp_tabu/*.o
+*.o
+*.exe
+*.out
