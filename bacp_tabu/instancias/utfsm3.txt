@@ -1,0 +1,38 @@
+p = 4;
+a = 20;
+b = 35;
+c = 1;
+d = 8;
+
+courses = {
+        ein111a, efi100t, mat001a, hcw100t, ein113a, ein112a,
+        ein121a, ein122a, ein123a, hcw101t, mat002a, ein124a,
+        ein135a, ein134a, ein133a, hcw102t, ein132a, ein131a,
+        ein142a, hrw101a, ein144a, ein143a, ein141a
+};
+
+credit = [
+        5, 2, 5, 3, 5, 6,
+        5, 5, 5, 3, 5, 5,
+        5, 6, 6, 3, 5, 5,
+        6, 3, 6, 6, 6
+];
+
+prereq = {
+        <mat002a, mat001a>,
+        <hcw101t, hcw100t>,
+        <hcw102t, hcw101t>,
+        <ein121a, ein111a>,
+        <ein122a, ein111a>,
+        <ein123a, ein112a>,
+        <ein124a, ein112a>,
+        <ein131a, ein122a>,
+        <ein132a, ein121a>,
+        <ein133a, ein124a>,
+        <ein134a, ein123a>,
+        <ein135a, ein113a>,
+        <ein141a, ein131a>,
+        <ein142a, ein133a>,
+        <ein143a, ein132a>,
+        <ein144a, ein135a>
+};

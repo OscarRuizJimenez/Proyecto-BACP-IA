@@ -1,0 +1,59 @@
+p = 8;
+a = 20;
+b = 35;
+c = 1;
+d = 8;
+
+courses = {
+        mat100b, ein412b, ein413b, efi100t, hrw101b, hcw100t,
+        mat001b, qma001b, ein423b, efi101t, hrw102b, hcw101t,
+        mat021b, fis009b, ein080b, ein079b, ein009b, hcw102t,
+        hmn295t, fis007b, ein081b, ein083b, ein082b, mat006b,
+        hmn292t, ein088b, ein084b, ein085b, ein086b, ein087b,
+        hmn293t, ein089b, ein093b, ein090b, ein091b, ein092b,
+        ein095b, ein096b, ein097b, ein098b, ein099b,
+        ein100b, ein101b, ein102b, ein103b, ein104b
+};
+
+credit = [
+        6, 5, 5, 2, 3, 2,
+        6, 5, 6, 2, 3, 2,
+        6, 5, 6, 6, 6, 2,
+        5, 5, 5, 5, 5, 4,
+        3, 3, 4, 6, 5, 6,
+        3, 3, 6, 6, 6, 6,
+        6, 6, 6, 6, 3,
+        6, 6, 6, 5, 6
+];
+
+prereq = {
+        <mat001b, mat100b>,
+        <ein423b, ein413b>,
+        <efi101t, efi100t>,
+        <hrw102b, hrw101b>,
+        <hcw101t, hcw100t>,
+        <mat021b, mat001b>,
+        <ein080b, ein423b>,
+        <ein009b, ein423b>,
+        <hcw102t, hcw101t>,
+        <hmn295t, mat100b>,
+        <fis007b, mat100b>,
+        <fis007b, fis009b>,
+        <ein081b, ein080b>,
+        <ein083b, ein079b>,
+        <ein082b, ein080b>,
+        <ein082b, ein009b>,
+        <mat006b, mat021b>,
+        <hmn292t, hmn295t>,
+        <ein086b, ein082b>,
+        <ein087b, mat006b>,
+        <ein089b, hmn292t>,
+        <ein089b, ein088b>,
+        <ein090b, ein085b>,
+        <ein091b, ein009b>,
+        <ein091b, ein086b>,
+        <ein092b, ein087b>,
+        <ein098b, ein088b>,
+        <ein098b, ein093b>,
+        <ein103b, ein098b>
+};

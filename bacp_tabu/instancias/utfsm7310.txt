@@ -1,0 +1,77 @@
+p = 10;
+a = 20;
+b = 35;
+c = 1;
+d = 8;
+
+courses = {
+        inf129, mat070, mat060, fis100, hxw006, efi200,
+        iwg400, mat071, mat061, fis110, hxw007, efi201,
+        inf131, inf132, mat081, fis112, hxw008, aux200,
+        inf133, inf135, mat053, fis114, hxw009, aux201,
+        inf138, inf140, inf141, inf143, inf229, inf142,
+        inf146, inf145, inf147, inf144, inf148, hxw012,
+        inf156, inf154, inf157, inf153, inf158, aux202,
+        inf165, inf164, aux219, inf166, inf167, inf163,
+        inf302, inf169, inf170, inf171, inf168,
+        inf539, inf540, inf541, inf538
+};
+
+credit = [
+        7, 6, 6, 6, 3, 2,
+        7, 6, 6, 6, 3, 2,
+        6, 5, 6, 6, 3, 4,
+        6, 6, 5, 6, 3, 4,
+        5, 5, 5, 5, 5, 5,
+        5, 5, 6, 6, 5, 3,
+        5, 6, 6, 5, 5, 3,
+        5, 5, 5, 5, 5, 5,
+        5, 6, 6, 6, 7,
+        4, 6, 6, 14
+];
+
+prereq = {
+        <mat071, mat070>,
+        <mat061, mat060>,
+        <fis110, fis100>,
+        <hxw007, hxw006>,
+        <efi201, efi200>,
+        <inf131, inf129>,
+        <inf132, mat070>,
+        <mat081, mat071>,
+        <mat081, mat061>,
+        <fis112, fis110>,
+        <hxw008, hxw007>,
+        <inf133, inf131>,
+        <inf135, inf129>,
+        <fis114, fis112>,
+        <hxw009, hxw008>,
+        <aux201, aux200>,
+        <inf138, inf133>,
+        <inf140, inf133>,
+        <inf141, inf133>,
+        <inf143, inf132>,
+        <inf229, inf133>,
+        <inf142, iwg400>,
+        <inf146, inf138>,
+        <inf145, inf140>,
+        <inf147, inf133>,
+        <inf144, inf133>,
+        <inf148, inf135>,
+        <hxw012, hxw009>,
+        <inf156, inf146>,
+        <inf154, inf140>,
+        <inf157, inf147>,
+        <inf153, mat053>,
+        <inf158, inf135>,
+        <aux202, aux201>,
+        <inf165, inf146>,
+        <inf164, inf145>,
+        <inf166, inf157>,
+        <inf167, inf142>,
+        <inf163, inf144>,
+        <inf302, aux219>,
+        <inf168, aux202>,
+        <inf539, inf168>,
+        <inf538, inf164>
+};

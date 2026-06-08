@@ -1,0 +1,87 @@
+p = 11;
+a = 20;
+b = 35;
+c = 1;
+d = 8; 
+
+courses = {
+        iwi131, mat021, fis100, hrw132, dew100,
+        qui010, mat022, fis110, iwg101, hrw133, dew101,
+        inf134, mat023, fis130, inf152, inf260, inf1,
+        inf253, mat024, fis120, inf155, iwn170, inf2,
+        inf239, inf245, fis140, inf280, inf270, inf3,
+        inf236, inf246, inf276, inf221, inf292, inf4,
+        inf225, inf256, icn270, inf285, inf293, inf5,
+        inf322, inf343, inf301, inf295, inf266, inf6,
+        inf302, inf303, inf311, inf312, inf360, inf7,
+        inf304, inf313, inf314, inf228, inf309,
+        inf310
+};
+
+credit = [
+        5, 8, 3, 3, 2,
+        5, 7, 8, 3, 3, 2,
+        5, 7, 8, 5, 3, 2,
+        5, 6, 8, 5, 5, 2,
+        5, 5, 8, 5, 5, 2,
+        5, 5, 5, 5, 5, 2,
+        5, 5, 5, 5, 5, 2,
+        5, 5, 5, 5, 5, 2,
+        5, 5, 5, 5, 5, 2,
+        5, 5, 5, 10, 2,
+        20
+];
+
+prereq = {
+        <mat022, mat021>,
+        <fis110, mat021>,
+        <fis110, fis100>,
+        <dew101, dew100>,
+        <inf134, iwi131>,
+        <mat023, mat022>,
+        <fis130, mat022>,
+        <fis130, fis110>,
+        <inf152, iwi131>,
+        <inf152, mat021>,
+        <inf260, iwg101>,
+        <inf253, inf134>,
+        <mat024, mat023>,
+        <fis120, mat022>,
+        <fis120, fis110>,
+        <inf155, inf134>,
+        <inf155, inf152>,
+        <iwn170, mat023>,
+        <inf239, inf134>,
+        <inf245, inf134>,
+        <fis140, fis130>,
+        <fis140, fis120>,
+        <inf280, iwi131>,
+        <inf280, mat023>,
+        <inf270, inf260>,
+        <inf236, inf239>,
+        <inf236, inf253>,
+        <inf246, inf245>,
+        <inf276, inf270>,
+        <inf221, inf152>,
+        <inf221, inf253>,
+        <inf292, iwi131>,
+        <inf292, mat023>,
+        <inf225, inf236>,
+        <inf256, inf246>,
+        <icn270, iwn170>,
+        <inf285, mat024>,
+        <inf285, inf221>,
+        <inf293, inf280>,
+        <inf293, inf292>,
+        <inf322, inf225>,
+        <inf343, inf256>,
+        <inf295, inf134>,
+        <inf295, inf292>,
+        <inf266, inf276>,
+        <inf360, inf322>,
+        <inf360, inf266>,
+        <inf228, inf360>,
+        <inf309, inf360>,
+        <inf310, inf228>,
+        <inf310, inf309>
+};
