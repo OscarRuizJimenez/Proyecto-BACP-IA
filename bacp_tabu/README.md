@@ -18,13 +18,13 @@ make clean
 ## Ejecución
 
 ```bash
-./bacp <archivo_instancia.txt>
+./bacp instancias/<archivo_instancia.txt>
 ```
 
 **Ejemplos:**
 ```bash
-./bacp bacp8.txt
-./bacp utfsm7313.txt
+./bacp instancias/bacp8.txt
+./bacp instancias/utfsm7313.txt
 ```
 
 
