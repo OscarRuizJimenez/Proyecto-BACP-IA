@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <random>
 
 using namespace std;
 
@@ -33,12 +34,34 @@ struct Solucion {
 };
 
 // ============================================================
+//  Parámetros de la Búsqueda Tabú (identifican una corrida)
+// ============================================================
+struct ParametrosTabu {
+    int      max_iter;        // tope de iteraciones por arranque
+    int      max_sin_mejora;  // iteraciones sin mejorar el best antes de cortar
+    int      kmin;            // tenencia tabú mínima (iteraciones)
+    int      kmax;            // tenencia tabú máxima (iteraciones)
+    int      restarts;        // número de arranques (multi-arranque)
+    double   alpha;           // fracción de la RCL del greedy aleatorizado (0..1)
+    unsigned seed;            // semilla del generador aleatorio (reproducibilidad)
+};
+
+ParametrosTabu parametros_por_defecto();
+
+// ============================================================
 //  Funciones declaradas
 // ============================================================
 bool     leer_instancia(const string& archivo, Instancia& inst);
-Solucion generar_solucion_inicial(const Instancia& inst);
+Solucion generar_solucion_inicial(const Instancia& inst, mt19937& rng, double alpha);
 double   calcular_fitness(const Solucion& sol, const Instancia& inst);
 bool     es_factible(const Solucion& sol, const Instancia& inst);
 void     imprimir_solucion(const Solucion& sol, const Instancia& inst);
+
+// Grafo inverso de prerrequisitos: sucesores[i] = asignaturas que tienen a i
+// como prerrequisito (necesario para la ventana de precedencia del movimiento Move).
+vector<vector<int>> construir_sucesores(const Instancia& inst);
+
+// Núcleo de la metaheurística: Búsqueda Tabú con multi-arranque.
+Solucion busqueda_tabu(const Instancia& inst, const ParametrosTabu& par);
 
 #endif

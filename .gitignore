@@ -1,0 +1,7 @@
+# Archivos de compilación C++
+*.o
+bacp_tabu/bacp
+
+# Python
+__pycache__/
+*.pyc

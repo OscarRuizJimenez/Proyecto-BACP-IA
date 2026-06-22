@@ -98,15 +98,39 @@ bool es_factible(const Solucion& sol, const Instancia& inst) {
 }
 
 // ============================================================
-//  Generación de solución inicial (heurística greedy por nivel)
+//  Grafo inverso de prerrequisitos
 //
-//  Estrategia:
+//  inst.prereq[i] lista los PREDECESORES de i (deben ir antes).
+//  sucesores[i] lista las asignaturas q que tienen a i como
+//  prerrequisito (deben ir DESPUÉS).  Se usa para acotar el
+//  vecindario del movimiento Move (ventana de precedencia).
+// ============================================================
+vector<vector<int>> construir_sucesores(const Instancia& inst) {
+    vector<vector<int>> sucesores(inst.n_asignaturas);
+    for (int i = 0; i < inst.n_asignaturas; i++)
+        for (int pre : inst.prereq[i])
+            sucesores[pre].push_back(i);
+    return sucesores;
+}
+
+// ============================================================
+//  Generación de solución inicial (greedy topológico ALEATORIZADO)
+//
+//  Estrategia (atiende la Retroalimentación: "agregar aleatoriedad
+//  al greedy"):
 //  1. Calcular el "nivel mínimo" de cada asignatura usando BFS
 //     topológico: una asignatura sin prerrequisitos tiene nivel 1;
 //     si tiene prerrequisitos, su nivel = max(nivel_prereqs) + 1.
-//  2. Ordenar asignaturas por nivel ascendente.
-//  3. Asignar al primer semestre que no viole las cotas de
-//     carga ni de cantidad.
+//  2. Ordenar asignaturas por nivel ascendente, BARAJANDO el orden
+//     dentro de un mismo nivel (rompe el determinismo).
+//  3. Asignar mediante una Lista Restringida de Candidatos (RCL,
+//     estilo GRASP): entre los semestres factibles (>= nivel, sin
+//     violar carga_max ni asign_max) se toma al azar uno de los
+//     menos cargados (mejor fracción 'alpha'), favoreciendo el
+//     balance pero diversificando los puntos de partida.
+//
+//  Distintas semillas producen soluciones iniciales distintas, lo
+//  que habilita el multi-arranque de la Búsqueda Tabú.
 // ============================================================
 
 // Calcula nivel mínimo de cada asignatura por topología
@@ -129,50 +153,87 @@ static vector<int> calcular_niveles(const Instancia& inst) {
     return nivel;
 }
 
-Solucion generar_solucion_inicial(const Instancia& inst) {
+// Longitud de la cadena más larga de SUCESORES bajo cada asignatura: cola[i] =
+// cuántos semestres deben venir necesariamente después de i.  Una asignatura
+// debe ubicarse en un semestre s con s + cola[i] <= N para que toda su cadena
+// de sucesores quepa.  Acotar por esto evita que el greedy empuje un curso tan
+// tarde que sus sucesores ya no quepan (lo que generaría violaciones de
+// prerrequisito imposibles de reparar con el vecindario restringido).
+static vector<int> calcular_cola(const Instancia& inst) {
+    int n = inst.n_asignaturas;
+    vector<int> cola(n, 0);
+    bool cambio = true;
+    for (int iter = 0; iter < n && cambio; iter++) {
+        cambio = false;
+        for (int i = 0; i < n; i++)
+            for (int pre : inst.prereq[i])           // arista pre -> i
+                if (cola[i] + 1 > cola[pre]) { cola[pre] = cola[i] + 1; cambio = true; }
+    }
+    return cola;
+}
+
+Solucion generar_solucion_inicial(const Instancia& inst, mt19937& rng, double alpha) {
     int n = inst.n_asignaturas;
     int N = inst.n_semestres;
 
     Solucion sol;
     sol.semestre.resize(n, 0);
 
-    // Niveles mínimos por prerrequisito
+    // Niveles mínimos por prerrequisito y cadena de sucesores (cota superior)
     vector<int> nivel = calcular_niveles(inst);
+    vector<int> cola  = calcular_cola(inst);
 
-    // Orden de asignación: nivel ascendente, desempate por créditos desc.
+    // Orden de asignación: nivel ascendente.  El desempate dentro de un
+    // mismo nivel es ALEATORIO (se baraja), no determinista.
     vector<int> orden(n);
     iota(orden.begin(), orden.end(), 0);
-    sort(orden.begin(), orden.end(), [&](int a, int b) {
-        if (nivel[a] != nivel[b]) return nivel[a] < nivel[b];
-        return inst.creditos[a] > inst.creditos[b];
+    shuffle(orden.begin(), orden.end(), rng);
+    stable_sort(orden.begin(), orden.end(), [&](int a, int b) {
+        return nivel[a] < nivel[b];
     });
 
     vector<double> carga_sem(N + 1, 0.0);
     vector<int>    count_sem(N + 1, 0);
 
     for (int i : orden) {
-        int sem_minimo = nivel[i];          // restricción de prerrequisito
-        if (sem_minimo > N) sem_minimo = N; // clamp
+        // Semestre mínimo válido: estrictamente después de la posición REAL de
+        // todos los prerrequisitos ya asignados (no solo de su nivel teórico).
+        // Esto garantiza que la solución inicial nunca viola prerrequisitos.
+        int sem_minimo = nivel[i];
+        for (int pre : inst.prereq[i])
+            sem_minimo = max(sem_minimo, sol.semestre[pre] + 1);
+        // Semestre máximo: deja espacio para la cadena de sucesores (s + cola <= N).
+        int sem_maximo = N - cola[i];
+        if (sem_minimo > N)        sem_minimo = N;          // salvaguarda
+        if (sem_maximo < sem_minimo) sem_maximo = sem_minimo; // salvaguarda
 
-        bool asignado = false;
-        // Intentar desde el semestre mínimo hacia adelante
-        for (int s = sem_minimo; s <= N; s++) {
+        // Reunir los semestres factibles (en [sem_minimo, sem_maximo], sin exceder
+        // cotas máximas) junto con su carga actual, para construir la RCL.
+        vector<pair<double,int>> candidatos;  // (carga_actual, semestre)
+        for (int s = sem_minimo; s <= sem_maximo; s++) {
             bool ok_carga = (carga_sem[s] + inst.creditos[i] <= inst.carga_max);
             bool ok_count = (count_sem[s] + 1 <= inst.asign_max);
-            if (ok_carga && ok_count) {
-                sol.semestre[i] = s;
-                carga_sem[s] += inst.creditos[i];
-                count_sem[s]++;
-                asignado = true;
-                break;
-            }
+            if (ok_carga && ok_count)
+                candidatos.push_back({carga_sem[s], s});
         }
-        // Si no cabe en ningún semestre válido, forzar al mínimo posible
-        if (!asignado) {
-            sol.semestre[i] = sem_minimo;
-            carga_sem[sem_minimo] += inst.creditos[i];
-            count_sem[sem_minimo]++;
+
+        int elegido;
+        if (!candidatos.empty()) {
+            // RCL: ordenar por carga ascendente y elegir al azar entre la
+            // mejor fracción 'alpha' (al menos 1 candidato).
+            sort(candidatos.begin(), candidatos.end());
+            int tam_rcl = max(1, (int)(alpha * candidatos.size()));
+            uniform_int_distribution<int> dist(0, tam_rcl - 1);
+            elegido = candidatos[dist(rng)].second;
+        } else {
+            // Si no cabe en ningún semestre válido, forzar al mínimo posible
+            // (solución infactible que la Búsqueda Tabú reparará).
+            elegido = sem_minimo;
         }
+
+        sol.semestre[i] = elegido;
+        carga_sem[elegido] += inst.creditos[i];
+        count_sem[elegido]++;
     }
 
     sol.fitness = calcular_fitness(sol, inst);

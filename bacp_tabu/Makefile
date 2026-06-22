@@ -1,7 +1,7 @@
 CXX      = g++
 CXXFLAGS = -std=c++17 -O2 -Wall -Wextra
 TARGET   = bacp
-SRCS     = main.cpp leer_instancia.cpp solucion.cpp
+SRCS     = main.cpp leer_instancia.cpp solucion.cpp tabu.cpp
 OBJS     = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
