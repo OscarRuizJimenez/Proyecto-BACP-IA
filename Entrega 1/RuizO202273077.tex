@@ -1,0 +1,365 @@
+\documentclass[letter, 10pt]{article}
+\usepackage[latin1]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage[dvips]{graphicx}
+\usepackage{url}
+\usepackage[top=3cm,bottom=3cm,left=3.5cm,right=3.5cm,footskip=1.5cm,headheight=1.5cm,headsep=.5cm,textheight=3cm]{geometry}
+
+
+\begin{document}
+\title{Inteligencia Artificial \\ \begin{Large}Estado del Arte: BACP \textit{(Balanced Academic Curriculum Problem)}\end{Large}}
+\author{Oscar Mauricio Ruiz Jimenez}
+\date{\today}
+\maketitle
+
+
+%--------------------No borrar esta secci\'on--------------------------------%
+\section*{Evaluaci\'on}
+
+\begin{tabular}{ll}
+Resumen (5\%): & \underline{\hspace{2cm}} \\
+Introducci\'on (5\%):  & \underline{\hspace{2cm}} \\
+Definici\'on del Problema (10\%):  & \underline{\hspace{2cm}} \\
+Estado del Arte (35\%):  & \underline{\hspace{2cm}} \\
+Modelo Matem\'atico (20\%): &  \underline{\hspace{2cm}}\\
+Conclusiones (20\%): &  \underline{\hspace{2cm}}\\
+Bibliograf\'ia (5\%): & \underline{\hspace{2cm}}\\
+ &  \\
+\textbf{Nota Final (100\%)}:   & \underline{\hspace{2cm}}
+\end{tabular}
+%---------------------------------------------------------------------------%
+\vspace{2cm}
+
+
+\begin{abstract}
+El \textit{Balanced Academic Curriculum Problem} (BACP) es un problema de optimizaci\'on combinatoria que consiste en asignar un conjunto de asignaturas universitarias a semestres, de manera que la carga acad\'emica quede distribuida de la forma m\'as equitativa posible, respetando las relaciones de prerrequisito entre cursos y las restricciones de capacidad semestral. Este informe presenta un estudio del estado del arte del BACP, analizando las principales t\'ecnicas de resoluci\'on propuestas en la literatura: Programaci\'on con Restricciones (CP), metaheur\'isticas y enfoques h\'ibridos. Se formaliza el modelo matem\'atico del problema y se concluye que las M\'aquinas de B\'usqueda Local Generalizada (GLSM) representan actualmente las estrategias m\'as eficaces para resolver instancias a escala real. 
+\end{abstract}
+
+
+\newpage
+
+
+\section{Introducci\'{o}n}
+
+El dise\~{n}o de mallas curriculares universitarias es una tarea compleja que afecta directamente la experiencia acad\'{e}mica de los estudiantes. Una distribuci\'{o}n desbalanceada de los cursos puede provocar periodos de saturaci\'{o}n extrema alternados con baja actividad, lo que impacta negativamente en el rendimiento y la retenci\'{o}n estudiantil. El \textit{Balanced Academic Curriculum Problem} (BACP), introducido formalmente por Castro y Manzano \cite{Castro2001}, formaliza este desaf\'{i}o como un problema de optimizaci\'{o}n combinatoria con restricciones.
+
+
+En el sistema de educaci\'on superior chileno, la carga acad\'emica 
+de cada asignatura se mide en cr\'editos bajo el est\'andar 
+SCT-Chile (\textit{Sistema de Cr\'editos Transferibles}), adoptado 
+por las universidades del CRUCH para medir y armonizar el trabajo 
+acad\'emico total del estudiante, incluyendo tanto horas presenciales 
+como de trabajo aut\'onomo~\cite{sctchile}. Un cr\'edito SCT 
+representa entre 24 y 31 horas de trabajo real del estudiante, 
+siendo 60 cr\'editos el equivalente a un a\~no acad\'emico completo 
+a dedicaci\'on exclusiva.  En particular, la Universidad 
+T\'ecnica Federico Santa Mar\'ia establece desde el a\~no acad\'emico 
+2021 que 1 cr\'edito SCT equivale a 27 horas de trabajo semestral,  
+fijando adem\'as un m\'aximo de 35 cr\'editos SCT por 
+semestre por estudiante~\cite{usmcreditos}.  Este marco normativo hace que el 
+dise\~no de una malla curricular balanceada no sea solo un problema 
+te\'orico, sino una necesidad pr\'actica concreta con impacto directo 
+en la experiencia y rendimiento estudiantil.
+
+
+La relevancia de este estudio dentro del \'{a}rea de la Inteligencia Artificial radica en que el BACP, debido a su naturaleza NP-Hard y la alta densidad de sus restricciones de precedencia, enfoques de b\'usqueda exhaustiva resultan infactibles por lo que se implementan t\'ecnicas de b\'usqueda local, enfoques basados en metaheur\'isticas y enfoques h\'ibridos que combinan distintos algoritmos. El prop\'{o}sito de este informe es caracterizar formalmente el problema y realizar una revisi\'{o}n exhaustiva de la literatura especializada. La contribuci\'{o}n principal consiste en sintetizar y contrastar la eficacia de los enfoques de Programaci\'{o}n con Restricciones (CP) frente a las metaheur\'{i}sticas modernas, identificando las estrategias que definen el estado del arte actual.
+
+El documento se organiza de la siguiente manera: la Secci\'{o}n 2 define el problema, sus dificultades de resoluci\'{o}n y principales variantes; la Secci\'{o}n 3 presenta el estado del arte, describiendo las t\'{e}cnicas de soluci\'{o}n y una s\'{i}ntesis de sus resultados; la Secci\'{o}n 4 detalla la formulaci\'on matem\'atica de la funci\'on de optimizaci\'on subyacente al problema; finalmente, la Secci\'{o}n 5 recoge las conclusiones y proyecciones del estudio.
+
+
+\section{Definici\'on del Problema}
+
+\subsection{Descripci\'on general}
+El BACP consiste en asignar un conjunto de asignaturas $A = \{a_1, a_2, \dots, a_n\}$ a un conjunto de semestres $S = \{1, 2, \dots, N\}$, donde cada asignatura $a_i$ posee una carga acad\'emica $w_i \in \mathbb{Z}^+$ y puede tener un conjunto de prerrequisitos $\text{Pre}(a_i) \subseteq A$. La asignaci\'on debe respetar las relaciones de prerrequisito (una asignatura s\'olo puede cursarse en un semestre posterior al de todos sus prerrequisitos) y cumplir con restricciones sobre la carga total y el n\'umero de asignaturas por semestre. El objetivo es minimizar el desbalance de carga acad\'emica entre los semestres.
+
+
+\subsection{Dificultades y complejidad del problema}
+La resoluci\'{o}n del BACP presenta desaf\'{i}os computacionales significativos. Dada su estructura matem\'{a}tica, estrechamente relacionada con problemas de empaquetamiento y asignaci\'{o}n generalizada, el BACP est\'{a} clasificado dentro de la categor\'{i}a NP-Hard~\cite{Castro2001}. Esto implica que el tama\~{n}o del espacio de soluciones crece de manera exponencial a medida que aumenta el n\'{u}mero de asignaturas y semestres. En mallas curriculares extensas, como las de los programas de ingenier\'{i}a, intentar evaluar todas las combinaciones posibles mediante m\'{e}todos exactos resulta computacionalmente intratable para instancias de gran escala~\cite{Chiarandini2012}. 
+
+Adem\'{a}s de la explosi\'{o}n combinatoria, la alta densidad de las restricciones dificulta el proceso de optimizaci\'{o}n. Las extensas cadenas de prerrequisitos restringen severamente los vecindarios v\'{a}lidos, generando un espacio de b\'{u}squeda altamente fragmentado. Como se\~{n}alan Chiarandini et al.~\cite{Chiarandini2012}, esta topolog\'{i}a provoca que los algoritmos de b\'{u}squeda local queden atrapados frecuentemente en \'{o}ptimos locales, requiriendo mecanismos avanzados de diversificaci\'{o}n (como los \textit{kickers} o cadenas de eyecci\'{o}n) para lograr transitar hacia regiones factibles y alcanzar un balance de carga equitativo.
+
+\subsection{Variantes conocidas}
+En la literatura se han estudiado diversas variantes del BACP:
+\begin{itemize}
+    \item \textbf{BACP cl\'asico:} Formulado originalmente por Castro y Manzano \cite{Castro2001}, donde se minimiza la varianza de la carga acad\'emica entre semestres, sujeto a restricciones de prerrequisito y cotas de carga y n\'umero de asignaturas por semestre.
+    \item \textbf{BACP con restricciones adicionales:} Monette et al. \cite{Monette2007} extienden el modelo incluyendo restricciones de co-rrequisito (asignaturas que deben cursarse en el mismo semestre), restricciones de incompatibilidad y restricciones de orden m\'as complejas.
+    \item \textbf{BACP revisado:} Chiarandini et al. \cite{Chiarandini2012} reformulan el problema identificando inconsistencias en las instancias originales de la literatura, proporcionando un conjunto de instancias revisadas y un \textit{benchmark} actualizado. Esta variante es la m\'as utilizada en trabajos recientes.
+    \item \textbf{Multi-objetivo:} Algunos trabajos consideran objetivos adicionales, como la minimizaci\'on del n\'umero de semestres o la maximizaci\'on del balance entre asignaturas te\'oricas y pr\'acticas.
+\end{itemize}
+\subsection{Detalle de la variante a estudiar}
+En este trabajo se estudia la variante cl\'asica del BACP, siguiendo la formulaci\'on de Castro y Manzano, con el conjunto de instancias revisado por Chiarandini et al. El problema se caracteriza por los siguientes par\'ametros:
+
+\begin{itemize}
+    \item Un conjunto de asignaturas con su respectiva carga academica.
+    \item Relaciones de prerrequisito entre asignaturas.
+    \item N\'umero m\'aximo de semestres $N$.
+    \item Carga acad\'emica minima ($C_{min}$) y m\'axima ($C_{max}$) por semestre.
+    \item N\'umero m\'inimo ($n_{min}$) y m\'aximo ($n_{max}$) de asignaturas por semestre.
+\end{itemize}
+La variable de decisi\'on es la asignaci\'on de cada asignatura a un semestre espec\'ifico. El objetivo es minimizar el desbalance de la carga acad\'emica entre los semestres, buscando que sea lo m\'as equitativa posible.\\
+
+Las \textbf{variables} del problema son:
+\begin{itemize}
+    \item La asignaci\'on de cada asignatura a un semestre 
+    espec\'ifico de la malla curricular.
+\end{itemize}
+
+Las \textbf{restricciones} que debe cumplir toda soluci\'on 
+v\'alida son:
+\begin{itemize}
+    \item Cada asignatura debe quedar asignada a exactamente 
+    un semestre.
+    \item Si una asignatura es prerrequisito de otra, debe 
+    cursarse en un semestre estrictamente anterior.
+    \item La carga acad\'emica total de cada semestre debe 
+    mantenerse dentro de los l\'imites m\'inimo y m\'aximo 
+    establecidos.
+    \item El n\'umero de asignaturas asignadas a cada semestre 
+    debe respetar los valores m\'inimo y m\'aximo definidos.
+    \item La malla curricular debe completarse dentro del 
+    n\'umero m\'aximo de semestres disponibles.
+\end{itemize}
+
+\section{Estado del Arte}
+\subsection{Origen y trabajos fundacionales}
+El BACP fue introducido formalmente en el a\~no 2001 por Castro y Manzano \cite{Castro2001} en el contexto de la planificaci\'on acad\'emica automatizada. Originalmente, el problema surgi\'o como un caso de estudio para evaluar estrategias de ordenamiento de variables y valores en problemas de satisfacci\'on de restricciones (CSP). En su trabajo fundacional, los autores modelaron el problema como un CSP y estudiaron heur\'isticas de selecci\'on de variables (\textit{fail-first}, \textit{smallest domain}) y de ordenamiento de valores (\textit{min-conflicts}) para mejorar la eficiencia de la b\'usqueda. Este trabajo proporcion\'o el conjunto de instancias de referencia original, que se convirti\'o en el \textit{benchmark} de la comunidad durante la d\'ecada siguiente.
+
+\subsection{Enfoques de Programaci\'on con Restricciones (CP)}
+El enfoque m\'as estudiado para el BACP es la programaci\'on con restricciones (CP), que permite modelar el problema de forma natural mediante variables, dominios y restricciones, y resolverlo mediante algoritmos de b\'usqueda con propagaci\'on de restricciones. 
+
+Monette y su equipo de investigaci\'on \cite{Monette2007} presentaron un modelo CP detallado para el BACP. Sus principales contribuciones incluyen: una nueva heur\'istica de ramificaci\'on, el uso de relaciones de dominancia, experimentos con varios criterios de balance, y una propuesta h\'ibrida de Programaci\'on con Restricciones y B\'usqueda Local. Adicionalmente, Schaus y su equipo de investigaci\'on, co-autores de esa investigaci\'on, desarrollaron en trabajos paralelos la restricci\'on global \textit{spread} para modelar directamente el objetivo de balance en problemas como el BACP.
+
+
+
+\subsection{Metaheur\'isticas y b\'usqueda local}
+Para abordar la complejidad de las instancias generalizadas del BACP, la literatura reciente destaca el uso de M\'aquinas de B\'usqueda Local Generalizada (GLSM). En este marco, el proceso de optimizaci\'on se apoya en componentes de b\'usqueda clasificados en dos categor\'ias principales: exploradores continuos o runners y saltos complejos o kickers.
+
+A continuaci\'on, se detallan las principales estrategias empleadas en este enfoque:
+
+
+\begin{itemize}
+    \item \textbf{Recorrido Simulado (SA):} Act\'{u}a como un \textit{runner} probabil\'{i}stico. En cada paso de la b\'{u}squeda, se selecciona un vecino aleatorio. Si el movimiento mejora la soluci\'{o}n actual, se acepta de inmediato. Si resulta en una soluci\'{o}n peor, con una degradaci\'{o}n de calidad igual a $\Delta f$, el movimiento a\'{u}n puede ser aceptado con una probabilidad de $e^{-\Delta f / T}$, donde $T$ representa el par\'{a}metro de decrecimiento temporal, llamado \textit{temperatura}. Se emplea un esquema de enfriamiento geom\'{e}trico donde, tras evaluar una cantidad definida de movimientos, la temperatura decrece mediante un factor $\gamma < 1$ (es decir, $T \leftarrow \gamma T$) \cite{Chiarandini2012}.
+    
+    \item \textbf{B\'{u}squeda Tab\'{u} Din\'{a}mica (DTS):} Implementada extensamente por Chiarandini et al. \cite{Chiarandini2012}, opera como un \textit{runner} agresivo que explora un subconjunto del vecindario y adopta la mejor soluci\'{o}n posible, independientemente de si mejora o empeora el costo actual. Para evitar ciclos, los movimientos recientes ingresan a una lista tab\'{u} a corto plazo durante un n\'{u}mero aleatorio de iteraciones en el rango $[k_{min}, k_{max}]$. Este estatus puede ser anulado por un criterio de aspiraci\'{o}n si el movimiento genera una nueva mejor soluci\'{o}n global. Adem\'{a}s, las penalizaciones de las restricciones se adaptan din\'{a}micamente mediante un factor $\xi$ para guiar la b\'{u}squeda hacia regiones factibles o permitir mayor exploraci\'{o}n \cite{Chiarandini2012}.
+    
+    \item \textbf{Saltos Complejos (K):} Los \textit{kickers} realizan un \'{u}nico salto de gran envergadura secuenciando m\'{u}ltiples movimientos elementales, emulando cadenas de eyecci\'{o}n. Para mantener la eficiencia, solo se eval\'{u}an secuencias l\'{o}gicamente vinculadas, como alteraciones en un mismo per\'{i}odo o en cursos con curr\'{i}culos compartidos. Estos saltos pueden ser aleatorios ($K_r$) para diversificaci\'{o}n, o enfocarse en la intensificaci\'{o}n adoptando la primera secuencia de mejora ($K_f$) o la mejor secuencia absoluta tras una exploraci\'{o}n exhaustiva ($K_b$)~\cite{Chiarandini2012}. Cabe destacar que esta estructura de kickers fue introducida originalmente por Di Gaspero y Schaerf~\cite{digaspero2008} y retomada por Chiarandini para su aplicaci\'on al BACP \cite{Chiarandini2012}.
+
+    \item \textbf{Optimizaci\'on por Colonia de Hormigas (ACO)}: 
+    Rubio et al.~\cite{rubio2013} presentaron la primera aplicaci\'on 
+    de ACO al BACP mediante el modelo \textit{Best-Worst Ant System} 
+    (BWAS). Este enfoque refuerza feromonas en aristas pertenecientes 
+    a buenas soluciones, penaliza las de la peor soluci\'on actual, 
+    e incorpora mutaci\'on de rastros de feromonas para introducir 
+    diversidad y evitar el estancamiento de la b\'usqueda.
+    
+    \item \textbf{Algoritmo de Luci\'ernagas Discreto (DFA)}: 
+    Al-Obeidat et al.~\cite{Firefly2023} propusieron una versi\'on 
+    discreta del algoritmo de luci\'ernagas combinada con un mecanismo 
+    de b\'usqueda local (LSM). Las soluciones iniciales se construyen 
+    mediante programaci\'on lineal y se representan en una matriz 
+    binaria, obteniendo resultados competitivos en instancias del 
+    CSPLib e instancias reales.
+
+\end{itemize}
+
+
+
+\subsection{Representaciones del problema y su efectividad}
+En la literatura se han utilizado principalmente dos formas de 
+representar computacionalmente el BACP, dependiendo de la 
+t\'ecnica de resoluci\'on a emplear:
+\begin{itemize}
+    \item \textbf{Representaci\'on Matricial (Binaria):} Utilizada 
+    com\'unmente en m\'etodos exactos como la Programaci\'on Lineal 
+    Entera (ILP). Consiste en una matriz de variables binarias 
+    $x_{ij} \in \{0,1\}$ que indica si la asignatura $i$ se imparte 
+    en el semestre $j$.
+    \item \textbf{Representaci\'on Vectorial (Entera):} Utilizada 
+    mayoritariamente en metaheur\'isticas. Consiste en un vector de 
+    asignaci\'on $x=(x_1, x_2, \dots, x_n)$, donde cada componente 
+    $x_i \in \{1, \dots, N\}$ representa el semestre asignado a la 
+    asignatura $a_i$~\cite{Chiarandini2012}.
+\end{itemize}
+En los enfoques de b\'usqueda local aplicados al BACP, la 
+representaci\'on vectorial es la m\'as utilizada. Chiarandini 
+et al.~\cite{Chiarandini2012} definen una soluci\'on candidata 
+bajo esta representaci\'on al dise\~nar sus heur\'isticas, mientras 
+que los m\'etodos exactos como ILP emplean naturalmente la 
+representaci\'on matricial. Su principal ventaja radica en que 
+garantiza estructuralmente la restricci\'on dura de ``asignaci\'on 
+\'unica'' (una asignatura no puede estar en dos semestres al mismo 
+tiempo), lo que reduce dr\'asticamente el tama\~no del espacio de 
+b\'usqueda. De este modo, los algoritmos pueden concentrarse 
+exclusivamente en optimizar el balance de carga, empleando los 
+siguientes movimientos de vecindad fundamentales:
+\begin{itemize}
+    \item \textbf{Intercambio (\textit{Swap}):} Intercambio de 
+    semestres entre dos asignaturas $a_{i}$ y $a_{j}$, validando 
+    la factibilidad de los prerrequisitos.
+    \item \textbf{Traslado (\textit{Move}):} Reasignaci\'on de una 
+    asignatura $a_{i}$ a un semestre diferente.
+    \item \textbf{Movimientos Compuestos (\textit{Kickers}):} 
+    Consisten en una secuencia de movimientos elementales del 
+    vecindario relacionados entre s\'i, operando bajo una l\'ogica 
+    similar a las cadenas de eyecci\'on (\textit{ejection 
+    chains})~\cite{Chiarandini2012}. Al evaluar la secuencia 
+    completa como una sola acci\'on, permiten realizar cambios 
+    estructurales profundos en la malla curricular.
+\end{itemize}
+
+
+\subsection{Manejo de restricciones}
+
+En la resoluci\'on del BACP mediante b\'usqueda local, la literatura especializada aborda el manejo de restricciones separ\'andolas en dos categor\'ias: restricciones duras (\textit{hard constraints}) y restricciones blandas (\textit{soft constraints}).
+
+Por un lado, la factibilidad de los prerrequisitos suele tratarse como una restricci\'on dura. Para mantener la coherencia cronol\'ogica de la malla curricular, los algoritmos limitan su exploraci\'on a vecindarios que no violen las precedencias, apoy\'andose te\'oricamente en los algoritmos h\'ibridos para CSP descritos por Prosser \cite{Prosser93Hybrid}, los cuales podan movimientos infactibles antes de ejecutarlos.
+
+Por otro lado, las restricciones de capacidad semestral (carga acad\'emica y n\'umero de cursos) se manejan mediante un enfoque de reparaci\'on con restricciones blandas. Seg\'un describen Di Gaspero y Schaerf \cite{digaspero2008} y aplican Chiarandini y su equipo \cite{Chiarandini2012}, la B\'usqueda Tab\'u Din\'amica (DTS) est\'a equipada con un mecanismo que adapta din\'amicamente la forma de la funci\'on de costo. Si una restricci\'on de capacidad se satisface durante un n\'umero determinado de iteraciones, su peso de penalizaci\'on ($P_i$) se relaja reduci\'endolo por un factor $\xi$ ($P_i \leftarrow P_i/\xi$), lo que permite al algoritmo explorar temporalmente regiones infactibles del espacio de b\'usqueda. Por el contrario, si la restricci\'on es violada, la penalizaci\'on se endurece ($P_i \leftarrow P_i \cdot \xi$) con el objetivo de forzar a la b\'usqueda a retornar hacia la factibilidad.
+
+
+\subsection{S\'intesis de resultados y eficacia algor\'itmica}
+En cuanto a la eficacia de los algoritmos desarrollados hasta la fecha, la literatura establece un claro consenso. Los enfoques iniciales basados puramente en Programaci\'on con Restricciones (CP) propuestos por Castro y Manzano, si bien fueron pioneros, resultan insuficientes para encontrar el \'optimo global en instancias reales de gran tama\~no. De manera similar, los m\'etodos exactos de Programaci\'on Lineal Entera (ILP) logran resolver instancias peque\~nas, pero fracasan en tiempos de ejecuci\'on aceptables al escalar el problema. 
+
+En contraste, las metaheur\'isticas basadas en B\'usqueda Local se posicionan actualmente como los algoritmos m\'as eficaces. Espec\'ificamente, el enfoque de M\'aquinas de B\'usqueda Local Generalizada (GLSM) implementado por Chiarandini et al.~\cite{Chiarandini2012} logr\'o encontrar soluciones factibles de alta calidad para todas las instancias del \textit{benchmark} revisado, acerc\'andose significativamente a los l\'imites te\'oricos (\textit{lower bounds}) en tiempos computacionales razonables, superando as\'i a los enfoques tradicionales.
+
+\subsection{Tendencias actuales y enfoques recientes}
+Las investigaciones m\'as recientes sobre el BACP se han enfocado en superar las limitaciones de las instancias cl\'asicas, explorando nuevas metaheur\'isticas inspiradas en la naturaleza e integrando el problema a escenarios acad\'emicos m\'as grandes. 
+
+Por un lado, se ha documentado el \'exito de algoritmos basados en inteligencia de enjambres para evadir \'optimos locales en el BACP. Ejemplos destacados de esto son la aplicaci\'on de la Optimizaci\'on por Colonia de Hormigas (ACO) implementada por Rubio et al.~\cite{rubio2013}, as\'i como enfoques discretos m\'as recientes basados en el algoritmo de las luci\'ernagas (\textit{Firefly Algorithm})~\cite{Firefly2023}, los cuales han demostrado una convergencia r\'apida en mallas curriculares complejas.
+
+Por otro lado, la tendencia macro en la investigaci\'on, como detallan Bettinelli et al.~\cite{Bettinelli2015}, apunta hacia la resoluci\'on de problemas integrados de planificaci\'on de horarios acad\'emicos (\textit{curriculum-based course timetabling}). En estos enfoques modernos, el balance de la malla curricular deja de ser un problema aislado y se convierte en la etapa precursora indispensable antes de realizar la asignaci\'on f\'isica de profesores, bloques horarios y salas de clases.
+\section{Modelo Matem\'{a}tico}
+
+El modelo matem\'{a}tico presentado a continuaci\'{o}n se basa en la formulaci\'{o}n original de Castro y Manzano \cite{Castro2001}, incorporando las correcciones y el formalismo propuesto por Chiarandini et al. \cite{Chiarandini2012} en su versi\'{o}n revisada del problema.
+
+\subsection{Par\'{a}metros}
+De acuerdo a la estructura del problema, se definen los siguientes par\'{a}metros:
+\begin{itemize}
+    \item $A$: Conjunto de todas las asignaturas que deben ser asignadas.
+    \item $w_i$: Carga acad\'{e}mica asociada a cada asignatura $i \in A$.
+    \item $P$: Conjunto de pares de prerrequisitos, donde $(a, b) \in P$ implica que la asignatura $a$ debe cursarse antes que $b$.
+    \item $N$: N\'{u}mero m\'{a}ximo de semestres disponibles en la malla curricular.
+    \item $C_{min}, C_{max}$: Carga acad\'{e}mica m\'{i}nima y m\'{a}xima permitida por semestre.
+    \item $n_{min}, n_{max}$: N\'{u}mero m\'{i}nimo y m\'{a}ximo de asignaturas permitidas por semestre.
+    \item $\bar{C}$: Carga acad\'{e}mica semestral promedio.
+\end{itemize}
+
+\subsection{Variable de Decisi\'{o}n}
+Se define una variable binaria para representar la asignaci\'on 
+de las asignaturas a los periodos acad\'emicos:
+$$x_{ij} = \begin{cases} 1 & \text{si la asignatura } i \in A 
+\text{ se asigna al semestre } j \in \{1, \dots, N\} \\ 
+0 & \text{en caso contrario} \end{cases}$$
+donde $x_{ij} \in \{0, 1\}$, $\forall\, i \in A$, 
+$\forall\, j \in \{1, \dots, N\}$.
+
+\subsection{Funci\'{o}n Objetivo}
+El objetivo es minimizar el desbalance de la carga acad\'{e}mica entre los semestres, buscando que sea lo m\'{a}s equilibrada posible respecto al promedio:
+$$\min f(x) = \sum_{j=1}^{N} (C_j - \bar{C})^2$$
+Donde $C_j$ es la carga total del semestre $j$, calculada como $C_j = \sum_{i \in A} w_i \cdot x_{ij}$.
+
+\subsection{Restricciones}
+El modelo est\'{a} sujeto a las siguientes condiciones de factibilidad:
+
+\begin{enumerate}
+    \item \textbf{Asignaci\'{o}n \'unica:} Cada asignatura debe ser asignada a exactamente un semestre.
+    $$\sum_{j=1}^{N} x_{ij} = 1 \quad \forall i \in A$$
+    
+    \item \textbf{Respeto de prerrequisitos:} Si una asignatura $a$ es prerrequisito de $b$, el semestre de $a$ debe ser estrictamente menor al de $b$.
+    $$\sum_{j=1}^{N} j \cdot x_{aj} < \sum_{j=1}^{N} j \cdot x_{bj} \quad \forall (a, b) \in P$$
+    
+    \item \textbf{L\'{i}mites de carga semestral:} La carga total de cada periodo debe mantenerse dentro de los rangos definidos.
+    $$C_{min} \leq \sum_{i \in A} w_i \cdot x_{ij} \leq C_{max} \quad \forall j \in \{1, \dots, N\}$$
+    
+    \item \textbf{L\'{i}mites de cantidad de asignaturas:} El n\'umero de cursos por semestre debe cumplir con los m\'{i}nimos y m\'{a}ximos acad\'{e}micos.
+    $$n_{min} \leq \sum_{i \in A} x_{ij} \leq n_{max} \quad \forall j \in \{1, \dots, N\}$$
+\end{enumerate}
+
+\section{Conclusiones}
+
+Del estudio del estado del arte del BACP se extraen las siguientes 
+conclusiones relevantes.
+
+\textbf{Sobre las t\'ecnicas y el problema que resuelven.} No todas 
+las t\'ecnicas revisadas abordan exactamente la misma variante del 
+problema. Los enfoques de Programaci\'on con Restricciones (CP) 
+propuestos por Castro y Manzano~\cite{Castro2001} y Monette et 
+al.~\cite{Monette2007} se centran en la variante cl\'asica del BACP 
+con instancias del CSPLib. En contraste, Chiarandini et 
+al.~\cite{Chiarandini2012} abordan una variante generalizada con 
+instancias reales m\'as complejas, mientras que trabajos recientes 
+como los de Rubio et al.~\cite{rubio2013} y Al-Obeidat et 
+al.~\cite{Firefly2023} retoman las instancias cl\'asicas del CSPLib 
+para validar nuevas metaheur\'isticas bioinspiradas.
+
+\textbf{Similitudes y diferencias entre las t\'ecnicas.} Todas las 
+t\'ecnicas comparten el objetivo de minimizar el desbalance de carga 
+acad\'emica respetando las restricciones de prerrequisito. Sin 
+embargo, difieren significativamente en su enfoque: los m\'etodos 
+exactos (CP e ILP) garantizan optimalidad pero escalan mal ante 
+instancias grandes, mientras que las metaheur\'isticas sacrifican 
+la garant\'ia de \'optimo global a cambio de soluciones de alta 
+calidad en tiempos razonables. En cuanto a la representaci\'on, los 
+m\'etodos exactos emplean variables binarias $x_{ij}$, mientras que 
+las metaheur\'isticas de b\'usqueda local prefieren la representaci\'on 
+vectorial por su eficiencia computacional. Respecto al manejo de 
+restricciones, todas las t\'ecnicas tratan los prerrequisitos como 
+restricciones duras, pero difieren en las restricciones de capacidad: 
+los m\'etodos exactos las imponen estrictamente, mientras que las 
+metaheur\'isticas las manejan mediante penalizaciones din\'amicas.
+
+\textbf{Limitaciones, trabajo futuro e ideas propias.} Una limitaci\'on 
+transversal a todas las t\'ecnicas revisadas es la dependencia de la 
+calidad de los par\'ametros de entrada: si la carga acad\'emica 
+asignada a cada asignatura no refleja con precisi\'on el trabajo real 
+del estudiante, el algoritmo puede considerar \'optima una malla 
+curricular que en la pr\'actica resulta desbalanceada. Esta brecha 
+entre la carga te\'orica y la carga real percibida por los estudiantes 
+constituye una limitaci\'on fundamental del modelo que ning\'un 
+algoritmo de optimizaci\'on puede corregir por s\'i solo.
+
+Como trabajo futuro, resultar\'ia prometedor incorporar mecanismos 
+de retroalimentaci\'on basados en datos hist\'oricos de rendimiento 
+estudiantil para ajustar din\'amicamente las cargas acad\'emicas, 
+acercando el modelo matem\'atico a la realidad. Adicionalmente, la 
+extensi\'on del BACP hacia variantes multi-objetivo que consideren 
+simult\'aneamente el balance de carga y la distribuci\'on de tipos de 
+asignaturas representa una direcci\'on de investigaci\'on con alto 
+impacto pr\'actico, especialmente en el contexto de mallas 
+curriculares basadas en competencias como las del sistema SCT-Chile.
+
+\section{Uso de LLMs}
+\noindent En el desarrollo de este proyecto se utilizaron herramientas de Inteligencia Artificial como apoyo para la redacci\'on y estructuraci\'on del documento, bajo el siguiente detalle:
+
+\begin{enumerate}
+    \item \textbf{Herramientas utilizadas:} Gemini (versi\'on Advanced/Pro) y Claude (Anthropic, versi\'on gratuita).
+    
+    \item \textbf{Prop\'osito de uso:} Estructurar el formato del documento en LaTeX, mejorar el estilo de redacci\'on acad\'emica, corregir gram\'atica y redactar borradores para secciones descriptivas (Estado del Arte y Modelo Matem\'atico) en base a apuntes propios.
+    
+    \item \textbf{Prompts relevantes:} Se utilizaron instrucciones de iteraci\'on y rigor acad\'emico, tales como: 
+    \begin{itemize}
+        \item \textit{``B\'asate estrictamente en los art\'iculos originales para explicar el manejo de restricciones, utiliza la terminolog\'ia formal de optimizaci\'on.''}
+        \item \textit{``Expl\'icame de manera breve este paper, y sus puntos clave que deber\'ia agregar al documento.''}
+        \item \textit{``?`C\'omo puedo explicar de mejor manera esta secci\'on?''}
+        \item \textit{``Genera el c\'odigo LaTeX para el modelo matem\'atico bas\'andote en las restricciones y funci\'on objetivo que te envi\'e.''}
+        \item \textit{``?`En qu\'e parte del paper puedo encontrar el tema X?''}
+        \item \textit{``?`C\'omo puedo referirme a todos los autores de un paper de forma simple para las citas?''}
+    \end{itemize}
+    
+    \item \textbf{Nivel de edici\'on:} Se conserv\'o gran parte de la base sint\'actica y gramatical generada por los LLMs, especialmente la estructura del c\'odigo LaTeX. Sin embargo, no hubo un ``copiar y pegar'' a ciegas: el contenido generado fue iterado varias veces para alinear la redacci\'on algor\'itmica estricta con las metodolog\'ias reales de los autores.
+    
+    \item \textbf{Validaci\'on:} Toda afirmaci\'on t\'ecnica, modelo matem\'atico y cita bibliogr\'afica generada por la IA fue verificada rigurosamente acudiendo a las fuentes primarias. Se contrast\'o la informaci\'on directamente con las diapositivas de la asignatura y los art\'iculos originales de la literatura (\textit{Chiarandini et al., 2012; Monette et al., 2007; Castro y Manzano, 2001}).
+\end{enumerate}
+%Herramienta: ChatGPT (GPT-5.x)
+%Uso: Generación de ideas y revisión de redacción
+%Prompt principal: “Explica el algoritmo SMS-EMOA con pseudocódigo formal”
+%Intervención: El texto fue adaptado, reorganizado y complementado con material de clase
+%Validación: Se contrastó con [fuente X]
+
+
+\bibliographystyle{plain}
+\bibliography{Referencias}
+
+\end{document} 
