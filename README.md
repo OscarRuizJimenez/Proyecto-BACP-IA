@@ -6,7 +6,9 @@ metaheurística **Búsqueda Tabú** (Dynamic Tabu Search, Chiarandini et al. 201
 
 ---
 
-## Compilación
+## Compilación 
+
+(antes se debe entrar a la carpeta bacp_tabu)
 
 ```bash
 make
